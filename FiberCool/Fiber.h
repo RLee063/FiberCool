@@ -2,7 +2,8 @@
 
 typedef enum {
 	FS_READY,
-	FS_EXCUTING
+	FS_EXCUTING,
+	FS_DONE
 }FSTATE;
 
 class Fiber
