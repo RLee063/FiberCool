@@ -1,57 +1,75 @@
 #include <iostream>
-#include <Windows.h>
-#include <vector>
+//#include <Windows.h>
+#include <list>
 #include "Fiber.cpp"
 #include "Fiber.h"
 using namespace std;
 
-//Its a fiber manager
-class FiberCool {
-public:
-	void * convertThreadToFiber();
-	void * createFiber(int * pProg, void * pvParam);
-	void * switchToFiber(void * pFiber);
-	//void startFiber();
-private:
-	int _fiberCount;
-	static Fiber* _mainFiber;
-	static Fiber* _currentFiber;
-	void _suspendFiber();
-	void _resumeFiber(void * pFiber);
-	static void _fiberRealease();
-	vector<Fiber*> fiberVector;
-};
+void dispatchFiber();
+void * convertThreadToFiber();
+void * createFiber(int * pProg, void * pvParam);
+void * switchToFiber(void * pFiber);
 
-void * FiberCool::createFiber(int * pProg, void * pvParam) {
+int _fiberCount;
+Fiber* _mainFiber;
+Fiber* _currentFiber;
+void _suspendFiber();
+void _resumeFiber(void * pFiber);
+void _fiberRealease();
+list<Fiber*> _fiberList;
+
+void dispatchFiber() {
+	for (list<Fiber*>::iterator it = _fiberList.begin(); it != _fiberList.end(); it++) {
+		if ((*it)->getFiberState() == FS_DONE) {
+			delete *it;
+			_fiberList.erase(it++);
+		}
+	}
+	if (!_fiberList.empty()) {
+		switchToFiber(_fiberList.front());
+	}
+	else {
+		switchToFiber(_mainFiber);
+	}
+	return;
+}
+
+void * createFiber(int * pProg, void * pvParam) {
 	Fiber * pFiber = new Fiber(pProg, pvParam, _fiberRealease);
+	_fiberList.push_back(pFiber);
 	return pFiber;
 }
 
-void * FiberCool::convertThreadToFiber() {
+void * convertThreadToFiber() {
 	Fiber* pFiber = new Fiber();
 	_currentFiber = pFiber;
+	_mainFiber = pFiber;
 	return pFiber;
 }
 
-void * FiberCool::switchToFiber(void * pFiber) {
+void *switchToFiber(void * pFiber) {
+	if (pFiber == _currentFiber) {
+		return pFiber;
+	}
 	_suspendFiber();
 	_resumeFiber(pFiber);
-	_currentFiber = (Fiber*)pFiber;
-	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
+
 }
 
-void FiberCool::_suspendFiber() {
+void _suspendFiber() {
 	PCONTEXT pContext;
 	//get current environment***********
 	//set Fiber's context
 }
 
-void FiberCool::_resumeFiber(void * pFiber) {
+void _resumeFiber(void * pFiber) {
+	_currentFiber = (Fiber*)pFiber;
+	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
 	PCONTEXT pContext= ((Fiber*)pFiber)->getPvFiberContext;
 	//set current environment***********
 }
 
-void FiberCool::_fiberRealease() {
+void _fiberRealease() {
 	_currentFiber->setFiberState(FS_DONE);
-
+	dispatchFiber();
 }
