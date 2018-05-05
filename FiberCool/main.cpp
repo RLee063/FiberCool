@@ -31,7 +31,6 @@ int main()
 	{
 		printf("cannot create\n");
 	}
-
 	StartThds();
 	return 0;
 }

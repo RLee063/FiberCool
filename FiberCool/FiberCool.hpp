@@ -25,7 +25,7 @@ void _dispatchFiber();
 void * createFiber(void * pProg, void * pvParam) {
 	Fiber * pFiber = new Fiber(pProg, pvParam, _fiberRealease);
 	//因为防止程序退出，所以先挂起主Fiber, 而且纤程应该不是这样的
-	//_fiberList.push_back(pFiber);
+	_fiberList.push_back(pFiber);
 	return pFiber;
 }
 
@@ -37,13 +37,16 @@ void * convertThreadToFiber() {
 }
 
 __declspec(naked) void * switchToFiber(Fiber * pFiber) {
+	_asm {
+		mov eax, [esp + 4]
+		mov pFiber, eax
+	}
 	if (_currentFiber == pFiber) {
 		_asm {
 			mov eax, pFiber
 			ret 0x4
 		}
 	}
-	
 	_asm {
 		mov tContext.Eax, eax
 		mov tContext.Ecx, ecx
@@ -63,34 +66,46 @@ __declspec(naked) void * switchToFiber(Fiber * pFiber) {
 	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
 	tContext = *((PCONTEXT)pFiber->getPvFiberContext());
 
-	if (pFiber->getFiberState() == FS_READY) {
-		tArgv = pFiber->getPvParam();
-		_asm {
-			mov esp, tContext.Esp
-			push tArgv
-			mov eax, tContext.Eax
-			mov ecx, tContext.Ecx
-			mov edx, tContext.Edx
-			mov ebx, tContext.Ebx
-			mov esi, tContext.Esi
-			mov edi, tContext.Edi
-			mov ebp, tContext.Ebp
-			call tContext.Eip
-		}
+	_asm {
+		mov esp, tContext.Esp
+		mov eax, tContext.Eax
+		mov ecx, tContext.Ecx
+		mov edx, tContext.Edx
+		mov ebx, tContext.Ebx
+		mov esi, tContext.Esi
+		mov edi, tContext.Edi
+		mov ebp, tContext.Ebp
+		jmp tContext.Eip
 	}
-	else {
-		_asm {
-			mov esp, tContext.Esp
-			mov eax, tContext.Eax
-			mov ecx, tContext.Ecx
-			mov edx, tContext.Edx
-			mov ebx, tContext.Ebx
-			mov esi, tContext.Esi
-			mov edi, tContext.Edi
-			mov ebp, tContext.Ebp
-			call tContext.Eip
-		}
-	}
+
+	//if (pFiber->getFiberState() == FS_READY) {
+	//	tArgv = pFiber->getPvParam();
+	//	_asm {
+	//		mov esp, tContext.Esp
+	//		push tArgv
+	//		mov eax, tContext.Eax
+	//		mov ecx, tContext.Ecx
+	//		mov edx, tContext.Edx
+	//		mov ebx, tContext.Ebx
+	//		mov esi, tContext.Esi
+	//		mov edi, tContext.Edi
+	//		mov ebp, tContext.Ebp
+	//		jmp tContext.Eip
+	//	}
+	//}
+	//else {
+	//	_asm {
+	//		mov esp, tContext.Esp
+	//		mov eax, tContext.Eax
+	//		mov ecx, tContext.Ecx
+	//		mov edx, tContext.Edx
+	//		mov ebx, tContext.Ebx
+	//		mov esi, tContext.Esi
+	//		mov edi, tContext.Edi
+	//		mov ebp, tContext.Ebp
+	//		jmp tContext.Eip
+	//	}
+	//}
 }
 
 void _fiberRealease() {
