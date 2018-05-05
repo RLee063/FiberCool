@@ -19,8 +19,6 @@ Fiber* _mainFiber;
 Fiber* _currentFiber;
 list<Fiber*> _fiberList;
 
-void _suspendFiber();
-void _resumeFiber(void * pFiber);
 void _fiberRealease();
 void _dispatchFiber();
 
@@ -39,6 +37,13 @@ void * convertThreadToFiber() {
 }
 
 __declspec(naked) void * switchToFiber(Fiber * pFiber) {
+	if (_currentFiber == pFiber) {
+		_asm {
+			mov eax, pFiber
+			ret 0x4
+		}
+	}
+	
 	_asm {
 		mov tContext.Eax, eax
 		mov tContext.Ecx, ecx
@@ -53,7 +58,11 @@ __declspec(naked) void * switchToFiber(Fiber * pFiber) {
 		mov tContext.Esp, esp
 	}
 	_currentFiber->setContext(&tContext);
+
+	_currentFiber = (Fiber*)pFiber;
+	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
 	tContext = *((PCONTEXT)pFiber->getPvFiberContext());
+
 	if (pFiber->getFiberState() == FS_READY) {
 		tArgv = pFiber->getPvParam();
 		_asm {
@@ -70,32 +79,18 @@ __declspec(naked) void * switchToFiber(Fiber * pFiber) {
 		}
 	}
 	else {
-
+		_asm {
+			mov esp, tContext.Esp
+			mov eax, tContext.Eax
+			mov ecx, tContext.Ecx
+			mov edx, tContext.Edx
+			mov ebx, tContext.Ebx
+			mov esi, tContext.Esi
+			mov edi, tContext.Edi
+			mov ebp, tContext.Ebp
+			call tContext.Eip
+		}
 	}
-	//if (pFiber == _currentFiber) {
-	//	return pFiber;
-	//}
-
-	//_suspendFiber();
-	//_resumeFiber(pFiber);
-}
-
-__declspec(naked) void _suspendFiber() {
-	_asm {
-		//check
-
-		ret 0x4;
-	}
-	//get current environment***********
-	//set Fiber's context
-}
-
-void _resumeFiber(void * pFiber) {
-	_currentFiber = (Fiber*)pFiber;
-	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
-	PCONTEXT pContext = (PCONTEXT)((Fiber*)pFiber)->getPvFiberContext();
-	//set current environment***********
-	//jmp here
 }
 
 void _fiberRealease() {
