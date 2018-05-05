@@ -2,6 +2,6 @@
 
 void YieldThd();
 
-void CreateThd(void* func, void * arg);
+bool CreateThd(void* func, void * arg);
 
 void StartThds();

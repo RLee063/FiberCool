@@ -1,23 +1,7 @@
+#pragma once
 #include "Fiber.h"
 #include <Windows.h>
-class Fiber
-{
-public:
-	//***结构化异常处理***
-	//...
-	//*******************
-	Fiber();
-	Fiber(void * prog, void * argv, void * releaseFunc);
-	~Fiber();
-	int getFiberState();
-	void setContext(void * pContext);
-	void * getPvFiberContext();
-	void setFiberState(int state);
-private:
-	CONTEXT _context;
-	FSTATE _fiberState;
-	void * _pvParam;					
-};
+
 
 Fiber::Fiber() {
 	//***set return value
@@ -45,7 +29,7 @@ int Fiber::getFiberState() {
 	return _fiberState;
 }
 
-void Fiber::setContext(void * pContext) {
+void Fiber::setContext(CONTEXT * pContext) {
 	_context = *(PCONTEXT)pContext;
 	return;
 }
@@ -56,4 +40,8 @@ void * Fiber::getPvFiberContext() {
 
 void Fiber::setFiberState(int state) {
 	_fiberState = (FSTATE)state;
+}
+
+void * Fiber::getPvParam() {
+	return _pvParam;
 }

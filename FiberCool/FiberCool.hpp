@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include <iostream>
 //#include <Windows.h>
 #include <list>
@@ -7,8 +8,11 @@ using namespace std;
 
 void * convertThreadToFiber();
 void * createFiber(void * pProg, void * pvParam);
-void * switchToFiber(void * pFiber);
+void * switchToFiber(Fiber * pFiber);
 //void * deleteFiber(void * pFiber);
+
+CONTEXT tContext;
+void * tArgv;
 
 int _fiberCount;
 Fiber* _mainFiber;
@@ -20,7 +24,7 @@ void _resumeFiber(void * pFiber);
 void _fiberRealease();
 void _dispatchFiber();
 
-void * createFiber(void * pProg, void * pvParam){
+void * createFiber(void * pProg, void * pvParam) {
 	Fiber * pFiber = new Fiber(pProg, pvParam, _fiberRealease);
 	//因为防止程序退出，所以先挂起主Fiber, 而且纤程应该不是这样的
 	//_fiberList.push_back(pFiber);
@@ -34,9 +38,39 @@ void * convertThreadToFiber() {
 	return pFiber;
 }
 
-__declspec(naked) void * switchToFiber(void * pFiber) {
+__declspec(naked) void * switchToFiber(Fiber * pFiber) {
 	_asm {
-		ret;
+		mov tContext.Eax, eax
+		mov tContext.Ecx, ecx
+		mov tContext.Edx, edx
+		mov tContext.Ebx, ebx
+		mov tContext.Esi, esi
+		mov tContext.Edi, edi
+		mov tContext.Ebp, ebp
+		mov eax, [esp]
+		mov tContext.Eip, eax
+		add esp, 4
+		mov tContext.Esp, esp
+	}
+	_currentFiber->setContext(&tContext);
+	tContext = *((PCONTEXT)pFiber->getPvFiberContext());
+	if (pFiber->getFiberState() == FS_READY) {
+		tArgv = pFiber->getPvParam();
+		_asm {
+			mov esp, tContext.Esp
+			push tArgv
+			mov eax, tContext.Eax
+			mov ecx, tContext.Ecx
+			mov edx, tContext.Edx
+			mov ebx, tContext.Ebx
+			mov esi, tContext.Esi
+			mov edi, tContext.Edi
+			mov ebp, tContext.Ebp
+			call tContext.Eip
+		}
+	}
+	else {
+
 	}
 	//if (pFiber == _currentFiber) {
 	//	return pFiber;
@@ -48,7 +82,9 @@ __declspec(naked) void * switchToFiber(void * pFiber) {
 
 __declspec(naked) void _suspendFiber() {
 	_asm {
+		//check
 
+		ret 0x4;
 	}
 	//get current environment***********
 	//set Fiber's context
@@ -57,7 +93,7 @@ __declspec(naked) void _suspendFiber() {
 void _resumeFiber(void * pFiber) {
 	_currentFiber = (Fiber*)pFiber;
 	((Fiber*)pFiber)->setFiberState(FS_EXCUTING);
-	PCONTEXT pContext= (PCONTEXT)((Fiber*)pFiber)->getPvFiberContext();
+	PCONTEXT pContext = (PCONTEXT)((Fiber*)pFiber)->getPvFiberContext();
 	//set current environment***********
 	//jmp here
 }

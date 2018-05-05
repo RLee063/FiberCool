@@ -1,14 +1,15 @@
-#include "FiberCool.cpp"
+#pragma once
+#include "FiberCool.hpp"
 
 void YieldThd() {
 	_dispatchFiber();
 }
 
-void CreateThd(void* func, void * arg) {
-	createFiber(func, arg);
+bool CreateThd(void* func, void * arg) {
+	return createFiber(func, arg);
 }
 
 void StartThds() {
 	convertThreadToFiber();
-	_dispatchFiber();
+	YieldThd();
 }
