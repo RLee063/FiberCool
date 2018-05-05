@@ -19,13 +19,19 @@ Fiber* _mainFiber;
 Fiber* _currentFiber;
 list<Fiber*> _fiberList;
 
+//listerror temp solve
+Fiber* _fiberArr[5];
+int _fiberArrIndex;
+
 void _fiberRealease();
 void _dispatchFiber();
 
 void * createFiber(void * pProg, void * pvParam) {
 	Fiber * pFiber = new Fiber(pProg, pvParam, _fiberRealease);
 	//因为防止程序退出，所以先挂起主Fiber, 而且纤程应该不是这样的
-	_fiberList.push_back(pFiber);
+	_fiberArr[_fiberArrIndex] = pFiber;
+	_fiberArrIndex++;
+	//_fiberList.push_back(pFiber);
 	return pFiber;
 }
 
@@ -114,22 +120,32 @@ void _fiberRealease() {
 }
 
 void _dispatchFiber() {
-	for (list<Fiber*>::iterator it = _fiberList.begin(); it != _fiberList.end(); it++) {
+	/*for (list<Fiber*>::iterator it = _fiberList.begin(); it != _fiberList.end(); it++) {
 		if ((*it)->getFiberState() == FS_DONE) {
 			delete *it;
 			_fiberList.erase(it++);
 		}
-	}
-	if (!_fiberList.empty()) {
-		//低劣的判断是否是当前Fiber的算法
-		if (_fiberList.front() == _currentFiber) {
-			_fiberList.pop_front();
-			_fiberList.push_back(_currentFiber);
-		}
-		switchToFiber(_fiberList.front());
+	}*/
+	//**********************************
+	if (_fiberArr[0] == _currentFiber) {
+		switchToFiber(_fiberArr[1]);
 	}
 	else {
-		switchToFiber(_mainFiber);
+		switchToFiber(_fiberArr[0]);
 	}
+	
+
+	//**********************************
+	//if (!_fiberList.empty()) {
+	//	//低劣的判断是否是当前Fiber的算法
+	//	if (_fiberList.front() == _currentFiber) {
+	//		_fiberList.pop_front();
+	//		_fiberList.push_back(_currentFiber);
+	//	}
+	//	switchToFiber(_fiberList.front());
+	//}
+	//else {
+	//	switchToFiber(_mainFiber);
+	//}
 	return;
 }

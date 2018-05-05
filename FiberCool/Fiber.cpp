@@ -10,13 +10,15 @@ Fiber::Fiber() {
 
 Fiber::Fiber(void * prog, void * pvParam, void * releaseFunc){
 	//***set return value
-	_context.Esp = (DWORD)new char[1000];
+	_context.Esp = (DWORD)new char[100000];
+	_context.Esp += 25000;
 	_context.Eip = (DWORD)prog;
 	this->_pvParam = pvParam;
 	int * pvStack = (int*)_context.Esp;
+	pvStack -= 1;
 	*pvStack = (int)pvParam;
-	*(pvStack + 1) = (int)releaseFunc;
-	_context.Esp = (DWORD)(pvStack + 2);
+	*(pvStack - 1) = (int)releaseFunc;
+	_context.Esp = (DWORD)(pvStack - 1);
 	_fiberState = FS_READY;
 }
 
@@ -30,7 +32,7 @@ int Fiber::getFiberState() {
 }
 
 void Fiber::setContext(CONTEXT * pContext) {
-	_context = *(PCONTEXT)pContext;
+	_context = *pContext;
 	return;
 }
 
