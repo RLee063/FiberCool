@@ -149,10 +149,12 @@
     <ClCompile Include="Fiber.cpp" />
     <ClCompile Include="FiberCool.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Fiber.h" />
     <ClInclude Include="FiberCool.h" />
+    <ClInclude Include="Thread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -24,12 +24,18 @@
     <ClCompile Include="Fiber.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FiberCool.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Fiber.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

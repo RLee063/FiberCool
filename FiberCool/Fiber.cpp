@@ -7,7 +7,7 @@ public:
 	//...
 	//*******************
 	Fiber();
-	Fiber(int * prog, void * argv, void * releaseFunc);
+	Fiber(void * prog, void * argv, void * releaseFunc);
 	~Fiber();
 	int getFiberState();
 	void setContext(void * pContext);
@@ -24,7 +24,7 @@ Fiber::Fiber() {
 	_fiberState = FS_EXCUTING;
 }
 
-Fiber::Fiber(int * prog, void * pvParam, void * releaseFunc){
+Fiber::Fiber(void * prog, void * pvParam, void * releaseFunc){
 	//***set return value
 	_context.Esp = (DWORD)new char[1000];
 	_context.Eip = (DWORD)prog;
