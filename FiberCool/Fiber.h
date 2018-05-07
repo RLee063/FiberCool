@@ -1,3 +1,6 @@
+/*
+Final version must include SEH
+*/
 #pragma once
 #include <Windows.h>
 typedef enum {
@@ -16,7 +19,6 @@ public:
 	//***结构化异常处理***
 	//...
 	//*******************
-
 	CONTEXT _context;
 
 	Fiber();
@@ -30,5 +32,6 @@ public:
 private:
 	FSTATE _fiberState;
 	void * _pvParam;
+	void * _espAllocP;
 };
 

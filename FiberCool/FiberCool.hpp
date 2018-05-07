@@ -1,7 +1,9 @@
+/*
+Still left some Fiber's function needed to be done
+*/
 #pragma once
 #pragma once
 #include <iostream>
-//#include <Windows.h>
 #include <list>
 #include "Fiber.h"
 using namespace std;
@@ -18,20 +20,13 @@ int _fiberCount;
 Fiber* _mainFiber;
 Fiber* _currentFiber;
 list<Fiber*> _fiberList;
-
-//listerror temp solve
-Fiber* _fiberArr[5];
-int _fiberArrIndex;
+Fiber junkFiber;
 
 void _fiberRealease();
 void _dispatchFiber();
-
 void * createFiber(void * pProg, void * pvParam) {
 	Fiber * pFiber = new Fiber(pProg, pvParam, _fiberRealease);
-	//因为防止程序退出，所以先挂起主Fiber, 而且纤程应该不是这样的
-	_fiberArr[_fiberArrIndex] = pFiber;
-	_fiberArrIndex++;
-	//_fiberList.push_back(pFiber);
+	_fiberList.push_back(pFiber);
 	return pFiber;
 }
 
@@ -50,7 +45,7 @@ __declspec(naked) void * switchToFiber(Fiber * pFiber) {
 	if (_currentFiber == pFiber) {
 		_asm {
 			mov eax, pFiber
-			ret 0x4
+			ret
 		}
 	}
 	_asm {
@@ -83,35 +78,6 @@ __declspec(naked) void * switchToFiber(Fiber * pFiber) {
 		mov ebp, tContext.Ebp
 		jmp tContext.Eip
 	}
-
-	//if (pFiber->getFiberState() == FS_READY) {
-	//	tArgv = pFiber->getPvParam();
-	//	_asm {
-	//		mov esp, tContext.Esp
-	//		push tArgv
-	//		mov eax, tContext.Eax
-	//		mov ecx, tContext.Ecx
-	//		mov edx, tContext.Edx
-	//		mov ebx, tContext.Ebx
-	//		mov esi, tContext.Esi
-	//		mov edi, tContext.Edi
-	//		mov ebp, tContext.Ebp
-	//		jmp tContext.Eip
-	//	}
-	//}
-	//else {
-	//	_asm {
-	//		mov esp, tContext.Esp
-	//		mov eax, tContext.Eax
-	//		mov ecx, tContext.Ecx
-	//		mov edx, tContext.Edx
-	//		mov ebx, tContext.Ebx
-	//		mov esi, tContext.Esi
-	//		mov edi, tContext.Edi
-	//		mov ebp, tContext.Ebp
-	//		jmp tContext.Eip
-	//	}
-	//}
 }
 
 void _fiberRealease() {
@@ -119,33 +85,31 @@ void _fiberRealease() {
 	_dispatchFiber();
 }
 
+
+
 void _dispatchFiber() {
-	/*for (list<Fiber*>::iterator it = _fiberList.begin(); it != _fiberList.end(); it++) {
+	for (list<Fiber*>::iterator it = _fiberList.begin(); it != _fiberList.end();) {
 		if ((*it)->getFiberState() == FS_DONE) {
-			delete *it;
+			if (*it == _currentFiber) {
+				_currentFiber = &junkFiber;
+			}
+			delete *it;		
 			_fiberList.erase(it++);
 		}
-	}*/
-	//**********************************
-	if (_fiberArr[0] == _currentFiber) {
-		switchToFiber(_fiberArr[1]);
+		else {
+			it++;
+		}
+	}
+
+	if (!_fiberList.empty()) {
+		if (_fiberList.front() == _currentFiber) {
+			_fiberList.pop_front();
+			_fiberList.push_back(_currentFiber);
+		}
+		switchToFiber(_fiberList.front());
 	}
 	else {
-		switchToFiber(_fiberArr[0]);
+		switchToFiber(_mainFiber);
 	}
-	
-
-	//**********************************
-	//if (!_fiberList.empty()) {
-	//	//低劣的判断是否是当前Fiber的算法
-	//	if (_fiberList.front() == _currentFiber) {
-	//		_fiberList.pop_front();
-	//		_fiberList.push_back(_currentFiber);
-	//	}
-	//	switchToFiber(_fiberList.front());
-	//}
-	//else {
-	//	switchToFiber(_mainFiber);
-	//}
 	return;
 }

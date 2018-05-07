@@ -4,7 +4,7 @@ using namespace std;
 
 void thd2(void * arg)
 {
-	for (int i = 4; i < 12; i++)
+	for (int i = 4;; i++)
 	{
 		printf("thd2: arg=%d , i = %d\n", (int)arg, i);
 		YieldThd();
@@ -17,7 +17,7 @@ void thd1(void * arg)
 	{
 		printf("cannot create\n");
 	}
-	for (int i = 0; i < 12; i++)
+	for (int i = 0; ; i++)
 	{
 		printf("thd1: arg=%d , i = %d\n", (int)arg, i);
 		YieldThd();

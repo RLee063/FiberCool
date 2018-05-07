@@ -10,7 +10,8 @@ Fiber::Fiber() {
 
 Fiber::Fiber(void * prog, void * pvParam, void * releaseFunc){
 	//***set return value
-	_context.Esp = (DWORD)new char[100000];
+	_espAllocP = new char[100000];
+	_context.Esp = (DWORD)_espAllocP;
 	_context.Esp += 25000;
 	_context.Eip = (DWORD)prog;
 	this->_pvParam = pvParam;
@@ -24,7 +25,6 @@ Fiber::Fiber(void * prog, void * pvParam, void * releaseFunc){
 
 Fiber::~Fiber() { 
 	//may have someting wrong here
-	delete [] (char*)this->_context.Esp;
 } 
 
 int Fiber::getFiberState() {
